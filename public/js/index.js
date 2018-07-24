@@ -3,12 +3,12 @@ var socket = io(); // This initiates the request, important to send data to the 
 socket.on('connect',function (){
   console.log('Connected to server');
 
-  socket.emit('createMessage',{
-    from: 'junaid',
-    text: 'Hey this is junaid'
-  });
+  // socket.emit('createMessage',{
+  //   from: 'junaid',
+  //   text: 'Hey this is junaid'
+  // });
 });
-
+ 
 socket.on('disconnect',function (){
   console.log('DisConnected');
 });
