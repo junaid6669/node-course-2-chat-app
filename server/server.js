@@ -37,11 +37,11 @@ socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
   // });
 
 
-  socket.on('createMessage', (message)=>{
+  socket.on('createMessage', (message, callback)=>{
     console.log('Create Message', message);
     //io.emit emits to every single connected connection
     io.emit('newMessage', generateMessage(message.from, message.text));
-
+    callback('This is from the server'); // You can send an object as well
     // io.emit('newMessage', {
     //   from:message.from,
     //   to:message.text,
