@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
-var {generateMessage} = require('./utils/message');
+var {generateMessage, generateLocationMessage} = require('./utils/message');
 
 const publicPath = path.join(__dirname, '../public');
 // console.log(__dirname + '/../public');
@@ -14,8 +14,7 @@ var server = http.createServer(app);
 var io = socketIO(server);
 app.use(express.static(publicPath));
 
-// io.on Lets you register an event listner
-
+//============== io.on Lets you register an event listner ======================//
 io.on('connection', (socket)=>{
   console.log('New User Connected');
 // socket.emit emits to a single connection
@@ -39,7 +38,7 @@ socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
 
   socket.on('createMessage', (message, callback)=>{
     console.log('Create Message', message);
-    //io.emit emits to every single connected connection
+    //====================== io.emit emits to every single connected connection =========================//
     io.emit('newMessage', generateMessage(message.from, message.text));
     callback('This is from the server'); // You can send an object as well
     // io.emit('newMessage', {
@@ -53,6 +52,10 @@ socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
     //   text:message.text,
     //   createdAt:new Date().getTime()
     //});
+  });
+
+  socket.on('createLocationMessage', (coords)=>{
+    io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
   });
 
   socket.on('disconnect', ()=>{
