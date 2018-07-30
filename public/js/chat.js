@@ -17,7 +17,16 @@ function scrollToBottom(){
 }
 
 socket.on('connect',function (){
-  console.log('Connected to server');
+  //console.log('Connected to server');
+  var params = jQuery.deparam(window.location.search);
+  socket.emit('join', params, function(err){
+    if(err){
+      alert(err);
+      window.location.href = '/';
+    }else{
+      console.log('No Error');
+    }
+  });
   // socket.emit('createMessage',{
   //   from: 'junaid',
   // });
@@ -26,6 +35,17 @@ socket.on('connect',function (){
 socket.on('disconnect',function (){
   console.log('DisConnected');
 });
+
+socket.on('updateUserList', function(users){
+  // console.log('Users list', users);
+  var ol =  jQuery('<ol></ol>');
+  users.forEach(function (user){
+    ol.append(`<li>${user}</li>`);
+  });
+
+  jQuery('#users').html(ol);
+});
+
 
 socket.on('newMessage', function(message){
   //console.log('New Message', message);

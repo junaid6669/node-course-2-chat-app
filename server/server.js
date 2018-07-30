@@ -4,7 +4,8 @@ const express = require('express');
 const socketIO = require('socket.io');
 
 var {generateMessage, generateLocationMessage} = require('./utils/message');
-
+var {isRealString} = require('./utils/validation');
+var {Users} = require('./utils/users');
 const publicPath = path.join(__dirname, '../public');
 // console.log(__dirname + '/../public');
 // console.log(publicPath)
@@ -12,13 +13,16 @@ const port = process.env.PORT || 3000;
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
+var users = new Users();
+
 app.use(express.static(publicPath));
 
 //============== io.on Lets you register an event listner ======================//
 io.on('connection', (socket)=>{
   console.log('New User Connected');
 // socket.emit emits to a single connection
-socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
+
+//socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
 
   // socket.emit('newMessage', {
   //   from : "Hassan",
@@ -27,8 +31,23 @@ socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
   //
   // });
 
-  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User Joined'));
+  //socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User Joined'));
 
+  socket.on('join', (params, callback) =>{
+    if(!isRealString(params.name) || !isRealString(params.room) ){
+      return callback('Name and Room name are required');
+    }
+    socket.join(params.room);
+    users.removeUser(socket.id);
+    users.addUser(socket.id, params.name, params.room);
+    //socket.room('the office fans');
+
+    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+    socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
+    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined.`));
+
+    callback();
+  });
   // socket.broadcast.emit('newMessage', {
   //   from:'Admin',
   //   text:'New User Joined',
@@ -59,7 +78,14 @@ socket.emit('newMessage', generateMessage('Admin', 'Welcome to the Chat App'));
   });
 
   socket.on('disconnect', ()=>{
-    console.log('User was disconnected');
+    var user = users.removeUser(socket.id);
+    // console.log('my user',user);
+    if(user){
+      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has left`));
+
+    }
+    //console.log('User was disconnected');
   });
 });
 
